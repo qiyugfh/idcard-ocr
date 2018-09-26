@@ -11,7 +11,7 @@ using namespace cv;
 int main() {
     printf("hello\n");
     Mat srcImage;
-    srcImage = imread("/home/loocha/fanghua/Projects/idcard-ocr/testimage/test1.jpg");
+    srcImage = imread("/home/loocha/fanghua/Projects/idcard-ocr/testimage/1.jpg");
     namedWindow("source image", WINDOW_NORMAL);
     imshow("source image", srcImage);
     waitKey(0);
