@@ -1,4 +1,1 @@
 *.cpp linguist-language=C++
-*.c lignuist-language=C
-*.py lignuist-language=Python
-*.sh lignuist-language=Shell
