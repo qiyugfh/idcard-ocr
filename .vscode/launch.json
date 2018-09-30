@@ -6,10 +6,10 @@
     "configurations": [
 
         {
-            "name": "(gdb) helloworld",
+            "name": "(gdb) idcard-ocr",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/helloworld",
+            "program": "${workspaceFolder}/build/idcard-ocr",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
@@ -24,7 +24,7 @@
                     "ignoreFailures": true
                 }
             ],
-            "preLaunchTask": "builddebug"
+            "preLaunchTask": "build-debug"
 
 
         }
