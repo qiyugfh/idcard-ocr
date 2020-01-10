@@ -12,6 +12,7 @@ using namespace std;
 using namespace cv;
 
 
+<<<<<<< HEAD
 const char *src_img_path = "../testimage/2.jpg";
 const char *gray_img_path = "result_gray.jpg";
 const char *threshold_img_path = "result_threshold.jpg";
@@ -94,6 +95,19 @@ void posDetect(const Mat &in){
 	cv::imwrite(location_img_path, out);
 	
 	
+=======
+Mat getRplane(const Mat &in){
+    vector<Mat> splitBGR(in.channels());
+    cv::split(in, splitBGR);
+ 
+    if(in.cols > 700 | in.rows > 600){
+      Mat resizeR(450, 600, CV_8UC1);
+      cv::resize(splitBGR[2], resizeR, resizeR.size());
+      return resizeR;
+    }else{
+      return splitBGR[2];
+    }
+>>>>>>> a73b63b9bfb32efc18aaa9a2950bcb551d82a34a
 }
 
 void printImagText(const char * image_path){
@@ -119,6 +133,7 @@ void printImagText(const char * image_path){
 
 int main() {
     printf("hello\n");
+<<<<<<< HEAD
     
 	// 加载原始图像
     Mat srcImage = cv::imread(src_img_path);
@@ -141,5 +156,25 @@ int main() {
     cv::waitKey(0);
 #endif   
 	
+=======
+    char *src_img_path = "../testimage/2.jpg";
+    char *dest_img_path = "result.jpg";
+    Mat srcImage = cv::imread(src_img_path);
+    Mat destImage = getRplane(srcImage);
+    
+    cv::imwrite(dest_img_path, destImage);
+
+    printf("*******************source image ocr*******************\n");
+    printImagText(src_img_path);
+    printf("*******************rplane image ocr*******************\n");
+    printImagText(dest_img_path);
+
+	
+    cv::namedWindow("source image", WINDOW_NORMAL);
+    cv::imshow("source image", srcImage);
+    cv::imshow("rpalne image", destImage);
+    
+    cv::waitKey(0);
+>>>>>>> a73b63b9bfb32efc18aaa9a2950bcb551d82a34a
     return 0;
 }

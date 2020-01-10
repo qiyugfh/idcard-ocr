@@ -2,22 +2,9 @@
     // See https://go.microsoft.com/fwlink/?LinkId=733558
     // for the documentation about the tasks.json format
     "version": "2.0.0",
-    // "tasks": [
-    //     {
-    //         "label": "build helloworld",
-    //         "type": "shell", 
-    //         "command": "g++",
-    //         "args": ["-g", "helloworld.cpp", "-o", "build/helloworld"],
-    //         "group": {
-    //             "kind": "build",
-    //             "isDefault": true
-    //         }
-    //     }
-    // ]
-
     "tasks": [
         {
-            "label": "builddebug",
+            "label": "build-debug",
             "command": "if [ ! -d \"./build\" ]; then  mkdir build; fi && cd build && cmake .. && make",
             "args": ["debug"],
             "type": "shell",

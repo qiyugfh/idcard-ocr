@@ -4,8 +4,9 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/usr/local/include/opencv",
-                "usr/local/include"
+                "/usr/local/include",
+                "usr/local/include/opencv",
+		"/usr/local/include/leptonica"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

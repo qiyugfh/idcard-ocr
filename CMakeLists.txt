@@ -5,8 +5,10 @@ set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS} -g")
 
 aux_source_directory(./src DIR_ROOT_SRCS)
 
-include_directories(/usr/local/include/opencv)
 include_directories(/usr/local/include)
+include_directories(/usr/local/include/opencv)
+include_directories(/usr/local/include/leptonica)
+
 link_directories(/usr/local/lib)
 list(APPEND DEPS_LIB opencv_stitching)
 list(APPEND DEPS_LIB opencv_objdetect)
@@ -25,6 +27,8 @@ list(APPEND DEPS_LIB opencv_imgcodecs)
 list(APPEND DEPS_LIB opencv_video)
 list(APPEND DEPS_LIB opencv_imgproc)
 list(APPEND DEPS_LIB opencv_core)
+list(APPEND DEPS_LIB lept)
+list(APPEND DEPS_LIB tesseract)
 
 
 add_executable(${EXE_NAME} ${DIR_ROOT_SRCS})
