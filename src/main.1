@@ -1,0 +1,237 @@
+#include <stdio.h> 
+#include <opencv2/opencv.hpp>
+#include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
+#include <tesseract/baseapi.h>
+#include <leptonica/allheaders.h>
+
+
+
+using namespace std;
+using namespace cv;
+
+
+const char *src_img_path = "../testimage/test4.jpg";
+const char *rplane_img_path = "result_rplane.jpg";
+const char *threshold_img_path = "result_threshold.jpg";
+const char *erode_img_path = "result_erode.jpg";
+const char *inv_img_path = "result_inv.jpg";
+const char *morphology_img_path = "result_morphology.jpg";
+const char *rect_img_path = "result_rect.jpg";
+
+
+
+//InfoType:0---其他 1.2---姓名 3.4---性别 5.6---民族 7.8---出生 9.10---住址 11.12---公民身份号码
+bool isEligible(const Rect &candidate, int &infoType)
+{
+    infoType=0;//默认为其他
+    //const float aspect = 4.5/0.3; //长宽比
+    const int minArea = 100; //最小区域
+    const int maxArea = 100000;  //最大区域
+
+    int area = candidate.height * candidate.width;
+    if( (area < minArea || area > maxArea)  )
+        return false;
+    else{//提取可能文字区域
+        //根据文字区域根据相对位置及面积，判断身份信息类型
+        //qDebug()<<"locate:"
+        //        <<candidate.x<<","<<candidate.y<<","<<candidate.width<<","<<candidate.height;
+        if(candidate.x<35*1.5&&candidate.x>35*0.5&&
+           candidate.y<40*1.5&&candidate.y>40*0.5&&
+           area<5000*1.5&&area>2500*0.5){//姓名
+            infoType=1;
+        }
+        else if(candidate.x<115*1.5&&candidate.x>115*0.5&&
+                candidate.y<40*1.5&&candidate.y>40*0.5&&
+                area<4800*1.5&&area>2400*0.5){//姓名（不带Label）
+            infoType=2;
+        }
+        else if(candidate.x<35*1.5&&candidate.x>35*0.5&&
+                candidate.y<80*1.5&&candidate.y>80*0.5&&
+                area<1500*1.5&&area>2400*0.5){//性别
+            infoType=3;
+        }
+        else if(candidate.x<115*1.5&&candidate.x>115*0.5&&
+                candidate.y<80*1.5&&candidate.y>80*0.5&&
+                area<500*1.5&&area>500*0.5){//性别（不带Label）
+            infoType=4;
+        }
+        else if(candidate.x<180*1.5&&candidate.x>180*0.5&&
+                candidate.y<100*1.5&&candidate.y>100*0.5&&
+                area<1800*1.5&&area>1800*0.5){//民族
+            infoType=5;
+        }
+        else if(candidate.x<230*1.5&&candidate.x>230*0.5&&
+                candidate.y<120*1.5&&candidate.y>120*0.5&&
+                area<1200*1.5&&area>1200*0.5){//民族（不带Label）(x)
+            infoType=6;
+        }
+        else if(candidate.x<35*1.5&&candidate.x>35*0.5&&
+                candidate.y<120*1.5&&candidate.y>120*0.5&&
+                area<4500*1.5&&area>4500*0.5){//出生
+            infoType=7;
+        }
+        else if(candidate.x<115*1.5&&candidate.x>115*0.5&&
+                candidate.y<145*1.5&&candidate.y>145*0.5&&
+                area<4000*1.5&&area>4000*0.5){//出生（不带Label）
+            infoType=8;
+        }
+        else if(candidate.x<35*1.5&&candidate.x>35*0.5&&
+                candidate.y<160*1.5&&candidate.y>160*0.5&&
+                area<25000*1.5&&area>12000*0.5){//住址
+            infoType=9;
+        }
+        else if(candidate.x<115*1.5&&candidate.x>115*0.5&&
+                candidate.y<190*1.5&&candidate.y>190*0.5&&
+                area<30000*1.5&&area>14000*0.5){//住址（不带Label）
+            infoType=10;
+        }
+        else if(candidate.x<35*1.5&&candidate.x>35*0.5&&
+                candidate.y<250*1.5&&candidate.y>250*0.5&&
+                area<7500*1.5&&area>7500*0.5){//公民身份号码
+            infoType=11;
+        }
+	else if(candidate.x<215*1.5&&candidate.x>215*0.5&&
+                candidate.y<250*1.5&&candidate.y>250*0.5&&
+                area<8000*1.5&&area>8000*0.5){//公民身份号码（不带Label）
+            infoType=12;
+        }
+        else{
+            return false;
+        }
+        return true;
+    }
+}
+
+
+
+void posDetect(const Mat &in, vector<pair<Rect, int> > &rectsWithType){
+    // 利用阈值二值化
+    Mat testRectClone = in.clone();
+    //cv::threshold(testRectClone, testRectClone, 120, 255, CV_THRESH_BINARY);
+    cv::threshold(testRectClone, testRectClone, 0, 255, cv::THRESH_OTSU);
+    cv::imwrite(threshold_img_path, testRectClone);      
+
+    // 输入图像
+    // 输出图像 
+    // 单元大小，这里是3*3的8位单元
+    // 腐蚀位置，为负值取核中心
+    cv::erode(testRectClone, in, Mat(3, 3, CV_8U), Point(-1, -1), 2);    
+    cv::imwrite(erode_img_path, in);
+    
+    Mat invImage(in.size(), in.type(), cv::Scalar(255));
+    // 黑白色反转，即背景为黑色
+    Mat thresholdInv = invImage - in;
+    cv::imwrite(inv_img_path, thresholdInv);
+
+    // 获取闭形态学的结构元素
+    Mat element = getStructuringElement(MORPH_RECT, Size(16, 12));
+    cv::morphologyEx(thresholdInv, thresholdInv, CV_MOP_CLOSE, element);
+    cv::imwrite(morphology_img_path, thresholdInv);  
+    
+    vector<vector<Point> > contours;
+    // 只检测外轮廓
+    cv::findContours(thresholdInv, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+    
+    // 对候选的轮廓进行筛选
+    vector<vector<cv::Point> >::iterator itc = contours.begin();
+    while(itc != contours.end()){
+	// 返回每个轮廓的最小有界矩形区域
+    	Rect mr = cv::boundingRect(Mat(*itc));
+        printf("rect width:%d, height:%d\n", mr.size().width, mr.size().height);
+        int infoType = 0;
+        if(mr.size().width == 0 || mr.size().height == 0){
+	    itc = contours.erase(itc);
+        }
+        
+        if(!isEligible(mr, infoType)){
+	    itc = contours.erase(itc);
+	}else{
+	    rectsWithType.push_back(make_pair(mr, infoType));
+	    ++itc;
+	}
+
+    }
+
+}
+
+Mat getRplane(const Mat &in){
+    vector<Mat> splitBGR(in.channels());
+    cv::split(in, splitBGR);
+ 
+    if(in.cols > 700 | in.rows > 600){
+      Mat resizeR(450, 600, CV_8UC1);
+      cv::resize(splitBGR[2], resizeR, resizeR.size());
+      return resizeR;
+    }else{
+      return splitBGR[2];
+    }
+}
+
+void printImagText(const char * image_path){
+  char *outText = NULL;
+  tesseract::TessBaseAPI *api = new tesseract::TessBaseAPI();
+  if(api->Init(NULL, "chi_sim")){
+    fprintf(stderr, "could not initialize tesseract.\n");
+    exit(1);
+  }
+
+  Pix *image = pixRead(image_path);
+  api->SetImage(image);
+
+  outText = api->GetUTF8Text();
+  printf("\n%s\n", outText);
+
+  api->End();
+  delete[] outText;
+  pixDestroy(&image);
+
+}
+
+
+int main() {
+    printf("hello\n");
+    
+    Mat srcImage = cv::imread(src_img_path);
+    printf("*******************source image ocr*******************\n");
+    printImagText(src_img_path);
+
+    // 获得原始图像R分量
+    Mat rplaneImage = getRplane(srcImage);
+    cv::imwrite(rplane_img_path, rplaneImage);
+
+    printf("*******************rplane image ocr*******************\n");
+    printImagText(rplane_img_path);
+ 
+    vector<pair<Rect, int> > rects;
+    // 获得身份证文字区域
+    posDetect(rplaneImage, rects);
+    
+    int progressVal = 0;
+    for(pair<Rect, int> rect:rects){
+	if(rect.first.x - 5 < 0 || rect.first.y - 5 < 0){
+	     continue;
+	}
+   
+	printf("rect first x:%d, y:%d, width:%d, height:%d, type:%d\n", rect.first.x, rect.first.y, rect.first.width, rect.first.height, rect.second); 
+        Rect imageRect(rect.first.x - 5, rect.first.y - 5, rect.first.width + 10, rect.first.height + 10);
+        Mat curImage = srcImage(imageRect);
+        cv::cvtColor(curImage, curImage, cv::COLOR_BGR2GRAY);
+	char path[512] = {0};
+	sprintf(path, "rect_%d.jpg", rect.second);
+        cv::imwrite(path, curImage);
+	printImagText(path);
+	//cv::imshow("rect image", curImage);
+    }
+
+#if 0	
+    cv::namedWindow("source image", WINDOW_NORMAL);
+    cv::imshow("source image", srcImage);
+    cv::imshow("rpalne image", rplaneImage);
+    
+    cv::waitKey(0);
+#endif   
+	
+    return 0;
+}
